@@ -58,6 +58,7 @@ add_executable(ray_tracer
     src/Sphere.cpp
     src/Utils.cpp
     src/Vec3.cpp
+    src/Plane.cpp # NEW: Added Plane.cpp to the list of source files
     ${IMGUI_SOURCES} # Add ImGui source files to the executable
 )
 
@@ -68,7 +69,7 @@ target_link_libraries(ray_tracer
     PRIVATE
     glfw
     GLEW::GLEW # Modern CMake target for GLEW
-    GL           # <--- CHANGED: Linking OpenGL directly as 'GL'
+    GL           # Linking OpenGL directly as 'GL'
 )
 
 # Set output directories for executables and libraries
