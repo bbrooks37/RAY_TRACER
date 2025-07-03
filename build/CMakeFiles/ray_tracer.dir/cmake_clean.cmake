@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/ray_tracer.dir/imgui/backends/imgui_impl_glfw.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/backends/imgui_impl_glfw.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/backends/imgui_impl_opengl3.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/backends/imgui_impl_opengl3.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_demo.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_demo.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_draw.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_draw.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_tables.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_tables.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_widgets.cpp.o"
+  "CMakeFiles/ray_tracer.dir/imgui/imgui_widgets.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Camera.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Camera.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Light.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Light.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Object.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Object.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Ray.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Ray.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Scene.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Scene.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Sphere.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Sphere.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Utils.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Utils.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/Vec3.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/Vec3.cpp.o.d"
+  "CMakeFiles/ray_tracer.dir/src/main.cpp.o"
+  "CMakeFiles/ray_tracer.dir/src/main.cpp.o.d"
+  "ray_tracer"
+  "ray_tracer.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/ray_tracer.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
