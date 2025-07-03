@@ -17,17 +17,19 @@
 #include "Light.h"
 #include "Camera.h"
 #include "Scene.h"
-#include "Utils.h" // Still useful for saving final image if needed, but not for real-time display
+#include "Utils.h"
+#include "Plane.h" // NEW: Include Plane header
 
 // Global variables for scene elements that will be modified by the GUI
 Camera* g_camera = nullptr;
 Scene* g_scene = nullptr;
 Object* g_selectedObject = nullptr; // Pointer to the currently selected object
-IntersectionInfo g_selectedHitInfo; // NEW: Stores the intersection info for the selected object
-Sphere* g_groundSphere = nullptr;   // Pointer to the ground sphere for exclusion
+IntersectionInfo g_selectedHitInfo; // Stores the intersection info for the selected object
+// Sphere* g_groundSphere = nullptr;   // REMOVED: No longer using a ground sphere
+Plane* g_groundPlane = nullptr;     // NEW: Pointer to the ground plane for exclusion
 
 const int IMAGE_WIDTH = 640;
-const int IMAGE_HEIGHT = 480; // Corrected: Removed duplicate 'int'
+const int IMAGE_HEIGHT = 480;
 std::vector<Vec3f> g_framebuffer(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 // OpenGL texture ID to display the ray-traced framebuffer
@@ -245,8 +247,8 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         IntersectionInfo tempSelectedHitInfo; // Temp to store the hit info of the potential selected object
 
         for (Object* obj : g_scene->objects) {
-            // Skip the ground sphere during picking
-            if (obj == g_groundSphere) {
+            // Skip the ground plane during picking
+            if (obj == g_groundPlane) { // Changed from g_groundSphere to g_groundPlane
                 continue;
             }
 
@@ -265,7 +267,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
             g_selectedHitInfo = tempSelectedHitInfo; // Assign the stored hit info
             std::cout << "Selected object at: (" << g_selectedHitInfo.point.x << ", " << g_selectedHitInfo.point.y << ", " << g_selectedHitInfo.point.z << ")" << std::endl;
         } else {
-            std::cout << "No object selected (or ground sphere hit)." << std::endl;
+            std::cout << "No object selected (or ground plane hit)." << std::endl; // Changed message
         }
     }
 }
@@ -295,6 +297,7 @@ int main(void) {
     }
 
     // Make the window's context current
+    glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
     // Register mouse button callback
@@ -349,8 +352,8 @@ int main(void) {
     g_scene->addObject(new Sphere(Vec3f(0.0f, 0.5f, 0.0f), 1.0f, Vec3f(1.0f, 0.0f, 0.0f))); // Red sphere
     g_scene->addObject(new Sphere(Vec3f(1.8f, -0.8f, -1.5f), 0.6f, Vec3f(0.0f, 1.0f, 0.0f))); // Green sphere
     g_scene->addObject(new Sphere(Vec3f(-1.5f, 1.0f, 0.8f), 0.7f, Vec3f(0.0f, 0.0f, 1.0f))); // Blue sphere
-    g_groundSphere = new Sphere(Vec3f(0.0f, -100.5f, 0.0f), 100.0f, Vec3f(0.8f, 0.8f, 0.8f)); // Large grey "ground" sphere
-    g_scene->addObject(g_groundSphere); // Add ground sphere and store its pointer
+    g_groundPlane = new Plane(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f), Vec3f(0.8f, 0.8f, 0.8f)); // NEW: Ground Plane
+    g_scene->addObject(g_groundPlane); // Add ground plane and store its pointer
     g_scene->addObject(new Sphere(Vec3f(-2.0f, -0.2f, -0.5f), 0.4f, Vec3f(1.0f, 1.0f, 0.0f))); // Yellow sphere
 
     // Add light sources to the scene
@@ -447,9 +450,8 @@ int main(void) {
     // Delete dynamically allocated scene objects and camera
     delete g_camera;
     delete g_scene;
-    // g_redSphere is no longer a separate global pointer to delete,
-    // as it's managed by g_scene->objects and deleted by g_scene's destructor.
-    // g_groundSphere is also deleted by g_scene's destructor.
+    // g_selectedObject is a pointer to an object owned by g_scene, so it's deleted by g_scene's destructor.
+    // g_groundPlane is also deleted by g_scene's destructor.
 
     // Cleanup OpenGL resources
     glDeleteProgram(g_shaderProgram);
