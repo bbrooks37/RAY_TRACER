@@ -1,3 +1,0 @@
-/home/patpa/ray_tracer/build/CMakeFiles/ray_tracer.dir
-/home/patpa/ray_tracer/build/CMakeFiles/edit_cache.dir
-/home/patpa/ray_tracer/build/CMakeFiles/rebuild_cache.dir
