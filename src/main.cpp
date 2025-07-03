@@ -18,15 +18,14 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Utils.h"
-#include "Plane.h" // NEW: Include Plane header
+#include "Plane.h" // Include Plane header
 
 // Global variables for scene elements that will be modified by the GUI
 Camera* g_camera = nullptr;
 Scene* g_scene = nullptr;
 Object* g_selectedObject = nullptr; // Pointer to the currently selected object
 IntersectionInfo g_selectedHitInfo; // Stores the intersection info for the selected object
-// Sphere* g_groundSphere = nullptr;   // REMOVED: No longer using a ground sphere
-Plane* g_groundPlane = nullptr;     // NEW: Pointer to the ground plane for exclusion
+Plane* g_groundPlane = nullptr;     // Pointer to the ground plane for exclusion
 
 const int IMAGE_WIDTH = 640;
 const int IMAGE_HEIGHT = 480;
@@ -248,7 +247,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
         for (Object* obj : g_scene->objects) {
             // Skip the ground plane during picking
-            if (obj == g_groundPlane) { // Changed from g_groundSphere to g_groundPlane
+            if (obj == g_groundPlane) {
                 continue;
             }
 
@@ -267,7 +266,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
             g_selectedHitInfo = tempSelectedHitInfo; // Assign the stored hit info
             std::cout << "Selected object at: (" << g_selectedHitInfo.point.x << ", " << g_selectedHitInfo.point.y << ", " << g_selectedHitInfo.point.z << ")" << std::endl;
         } else {
-            std::cout << "No object selected (or ground plane hit)." << std::endl; // Changed message
+            std::cout << "No object selected (or ground plane hit)." << std::endl;
         }
     }
 }
@@ -349,12 +348,12 @@ int main(void) {
     g_scene = new Scene(Vec3f(0.1f, 0.1f, 0.2f)); // Slightly bluish background
 
     // Add objects to the scene
-    g_scene->addObject(new Sphere(Vec3f(0.0f, 0.5f, 0.0f), 1.0f, Vec3f(1.0f, 0.0f, 0.0f))); // Red sphere
-    g_scene->addObject(new Sphere(Vec3f(1.8f, -0.8f, -1.5f), 0.6f, Vec3f(0.0f, 1.0f, 0.0f))); // Green sphere
-    g_scene->addObject(new Sphere(Vec3f(-1.5f, 1.0f, 0.8f), 0.7f, Vec3f(0.0f, 0.0f, 1.0f))); // Blue sphere
-    g_groundPlane = new Plane(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f), Vec3f(0.8f, 0.8f, 0.8f)); // NEW: Ground Plane
+    g_scene->addObject(new Sphere(Vec3f(0.0f, 0.5f, 0.0f), 1.0f, Vec3f(1.0f, 0.0f, 0.0f))); // Red sphere (sits on plane)
+    g_scene->addObject(new Sphere(Vec3f(1.8f, 0.0f, -1.5f), 0.6f, Vec3f(0.0f, 1.0f, 0.0f))); // Green sphere (raised to be above plane)
+    g_scene->addObject(new Sphere(Vec3f(-1.5f, 1.0f, 0.8f), 0.7f, Vec3f(0.0f, 0.0f, 1.0f))); // Blue sphere (already above plane)
+    g_groundPlane = new Plane(Vec3f(0.0f, -1.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f), Vec3f(0.8f, 0.8f, 0.8f)); // Ground Plane
     g_scene->addObject(g_groundPlane); // Add ground plane and store its pointer
-    g_scene->addObject(new Sphere(Vec3f(-2.0f, -0.2f, -0.5f), 0.4f, Vec3f(1.0f, 1.0f, 0.0f))); // Yellow sphere
+    g_scene->addObject(new Sphere(Vec3f(-2.0f, 0.0f, -0.5f), 0.4f, Vec3f(1.0f, 1.0f, 0.0f))); // Yellow sphere (raised to be above plane)
 
     // Add light sources to the scene
     g_scene->addLight(Light(Vec3f(6.0f, 6.0f, 6.0f), Vec3f(1.0f, 1.0f, 1.0f)));
