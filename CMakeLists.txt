@@ -2,16 +2,21 @@
 # This file defines how your C++ ray tracer project should be built using CMake.
 
 # Specify the minimum required version of CMake.
+# Version 3.10 is a common and stable choice that supports modern CMake features.
 cmake_minimum_required(VERSION 3.10)
 
-# Define the project name.
-project(RayTracer CXX)
+# Define the project name. This name will be used for the executable and other build artifacts.
+project(RayTracer CXX) # CXX specifies that this is a C++ project.
 
 # Set the C++ standard to C++11 or higher.
+# C++11 is used here as it provides necessary features like range-based for loops and smart pointers (though not used extensively in this basic example, it's a good standard).
 set(CMAKE_CXX_STANDARD 11)
+# Ensure that the specified C++ standard is strictly enforced.
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Add the 'src' directory to the include paths.
+# This allows you to use include directives like `#include "Vec3.h"` directly in your source files
+# without needing to specify the full path (e.g., `#include "src/Vec3.h"`).
 include_directories(src)
 
 # --- Find and Link External Libraries ---
@@ -58,7 +63,7 @@ add_executable(ray_tracer
     src/Sphere.cpp
     src/Utils.cpp
     src/Vec3.cpp
-    src/Plane.cpp # NEW: Added Plane.cpp to the list of source files
+    src/Plane.cpp
     ${IMGUI_SOURCES} # Add ImGui source files to the executable
 )
 
@@ -79,9 +84,26 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Optional: Add compiler flags for optimization and warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(ray_tracer PRIVATE -Wall -Wextra -pedantic -O3)
+    # -Wall: Enable all common warnings.
+    # -Wextra: Enable extra warnings not covered by -Wall.
+    # -pedantic: Issue all warnings demanded by strict ISO C++ compliance.
+    target_compile_options(ray_tracer PRIVATE -Wall -Wextra -pedantic)
+
+    # Add debugging symbols (-g) for easier debugging with tools like GDB.
+    # This is typically added when CMAKE_BUILD_TYPE is 'Debug'.
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(ray_tracer PRIVATE -g)
+    else()
+        # For Release or other builds, keep optimizations
+        target_compile_options(ray_tracer PRIVATE -O3)
+    endif()
 endif()
 
 if (MSVC)
-    target_compile_options(ray_tracer PRIVATE /W4 /Ox)
+    target_compile_options(ray_tracer PRIVATE /W4)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(ray_tracer PRIVATE /Zi) # Debug information for MSVC
+    else()
+        target_compile_options(ray_tracer PRIVATE /Ox)
+    endif()
 endif()

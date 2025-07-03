@@ -10,13 +10,7 @@
 // Constructor: Initializes camera properties and computes its orthonormal basis.
 Camera::Camera(const Vec3f& eye, const Vec3f& look, const Vec3f& up, float fov_deg, int width, int height)
     : eyePosition(eye), lookAt(look), upVector(up), fov(fov_deg), imageWidth(width), imageHeight(height) {
-    // Compute camera basis vectors (w, u, v)
-    // w: direction from lookAt to eye (negative camera Z-axis)
-    w = (eyePosition - lookAt).normalize();
-    // u: right vector (camera X-axis)
-    u = upVector.cross(w).normalize();
-    // v: up vector (camera Y-axis)
-    v = w.cross(u); // Already normalized if u and w are orthonormal
+    updateBasis(); // Call updateBasis to initialize u,v,w
 }
 
 // Computes the primary ray for a given pixel (i, j).
@@ -41,4 +35,33 @@ Ray Camera::computePrimaryRay(int i, int j) const {
     Vec3f rayDirection = (x_ndc * u + y_ndc * v - w).normalize();
 
     return Ray(eyePosition, rayDirection);
+}
+
+// NEW: Function to update the camera's basis vectors (u, v, w)
+void Camera::updateBasis() {
+    w = (eyePosition - lookAt).normalize();
+    
+    // Use a fixed world up vector for calculating 'u' to avoid gimbal lock issues
+    // and ensure 'u' is always horizontal.
+    Vec3f worldUp = Vec3f(0.0f, 1.0f, 0.0f); // Global Y-axis is always up
+
+    // Calculate u (right vector)
+    Vec3f temp_u = worldUp.cross(w);
+    // If temp_u is near zero, it means 'w' is parallel to 'worldUp' (camera looking straight up/down).
+    // In this edge case, we need a fallback for 'u'.
+    // A small epsilon check for squared length is more robust for floats.
+    if (temp_u.lengthSquared() < 1e-6f) {
+        // Camera is looking almost straight up or down.
+        // We can define 'u' to be along the world X-axis or a slightly perturbed vector.
+        // For an orbit camera, a fixed horizontal 'u' is often desired.
+        u = Vec3f(1.0f, 0.0f, 0.0f); // Fallback: World X-axis as right vector
+    } else {
+        u = temp_u.normalize();
+    }
+    
+    // Calculate v (up vector) - should always be orthogonal to w and u
+    v = w.cross(u);
+    // Normalize v as well to ensure perfect orthogonality and unit length,
+    // especially if 'u' was a fallback or had precision issues.
+    v = v.normalize();
 }

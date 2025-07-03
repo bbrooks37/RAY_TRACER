@@ -10,7 +10,7 @@ class Camera {
 public:
     Vec3f eyePosition;    // Position of the camera (eye)
     Vec3f lookAt;         // Point the camera is looking at
-    Vec3f upVector;       // Up direction for the camera
+    Vec3f upVector;       // Up direction for the camera (world up)
     float fov;            // Field of View in degrees
 
     // Image dimensions
@@ -25,6 +25,9 @@ public:
 
     // Computes the primary ray for a given pixel (i, j)
     Ray computePrimaryRay(int i, int j) const;
+
+    // NEW: Function to update the camera's basis vectors (u, v, w)
+    void updateBasis();
 };
 
 #endif // CAMERA_H

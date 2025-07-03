@@ -39,7 +39,7 @@ GLuint g_shaderProgram = 0;
 GLuint g_quadVAO = 0;
 GLuint g_quadVBO = 0;
 
-// --- NEW GLOBAL VARIABLES FOR MOUSE CAMERA CONTROL ---
+// --- GLOBAL VARIABLES FOR MOUSE CAMERA CONTROL ---
 float g_lastMouseX = IMAGE_WIDTH / 2.0f; // Initial mouse X position (center of screen)
 float g_lastMouseY = IMAGE_HEIGHT / 2.0f; // Initial mouse Y position (center of screen)
 bool g_firstMouse = true; // Flag to indicate if it's the first mouse movement
@@ -49,7 +49,7 @@ float g_cameraYaw = -90.0f;  // Initial yaw angle (looking along -Z axis)
 float g_cameraPitch = 0.0f; // Initial pitch angle
 float g_cameraRadius = 6.0f; // Distance from lookAt point (orbital radius)
 const float CAMERA_SENSITIVITY = 0.1f; // How fast the camera rotates with mouse movement
-// --- END NEW GLOBAL VARIABLES ---
+// --- END GLOBAL VARIABLES ---
 
 // Vertex Shader source code
 const char* vertexShaderSource = R"(
@@ -222,74 +222,76 @@ void renderScene() {
     }
 }
 
-// Mouse button callback function for GLFW
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    // Pass mouse events to ImGui first
+// --- Custom GLFW Callbacks (now explicitly defined and passed to ImGui's handlers) ---
+
+// Custom mouse button callback
+void customMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    // Always pass the event to ImGui's handler first
     ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
-    // Only process left mouse button press for picking, and if ImGui isn't capturing the mouse
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !ImGui::GetIO().WantCaptureMouse) {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-
-        // Convert mouse coordinates to normalized device coordinates (NDC)
-        float ndcX = (2.0f * static_cast<float>(xpos) / IMAGE_WIDTH) - 1.0f;
-        float ndcY = 1.0f - (2.0f * static_cast<float>(ypos) / IMAGE_HEIGHT); // Y is inverted
-
-        float fov_rad = g_camera->fov * M_PI / 180.0f;
-        float aspectRatio = static_cast<float>(IMAGE_WIDTH) / IMAGE_HEIGHT;
-        float halfHeight = std::tan(fov_rad / 2.0f);
-        float halfWidth = halfHeight * aspectRatio;
-
-        Vec3f rayDirection = (ndcX * halfWidth * g_camera->u + ndcY * halfHeight * g_camera->v - g_camera->w).normalize();
-        Ray pickingRay(g_camera->eyePosition, rayDirection);
-
-        float closestHitDistance = std::numeric_limits<float>::max();
-        Object* potentialHitObject = nullptr;
-        IntersectionInfo currentHitInfo;
-        IntersectionInfo tempSelectedHitInfo;
-
-        for (Object* obj : g_scene->objects) {
-            if (obj == g_groundPlane) {
-                continue;
+    // Only process our custom logic if ImGui is NOT capturing the mouse
+    if (!ImGui::GetIO().WantCaptureMouse) {
+        // Handle right mouse button for camera rotation
+        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            if (action == GLFW_PRESS) {
+                g_isRotating = true;
+                g_firstMouse = true; // Reset firstMouse flag when rotation starts
+            } else if (action == GLFW_RELEASE) {
+                g_isRotating = false;
             }
+        }
+        // Handle left mouse button for object picking
+        else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
 
-            if (obj->intersect(pickingRay, currentHitInfo)) {
-                if (currentHitInfo.distance < closestHitDistance) {
-                    closestHitDistance = currentHitInfo.distance;
-                    potentialHitObject = obj;
-                    tempSelectedHitInfo = currentHitInfo;
+            float ndcX = (2.0f * static_cast<float>(xpos) / IMAGE_WIDTH) - 1.0f;
+            float ndcY = 1.0f - (2.0f * static_cast<float>(ypos) / IMAGE_HEIGHT);
+
+            float fov_rad = g_camera->fov * M_PI / 180.0f;
+            float aspectRatio = static_cast<float>(IMAGE_WIDTH) / IMAGE_HEIGHT;
+            float halfHeight = std::tan(fov_rad / 2.0f);
+            float halfWidth = halfHeight * aspectRatio;
+
+            Vec3f rayDirection = (ndcX * halfWidth * g_camera->u + ndcY * halfHeight * g_camera->v - g_camera->w).normalize();
+            Ray pickingRay(g_camera->eyePosition, rayDirection);
+
+            float closestHitDistance = std::numeric_limits<float>::max();
+            Object* potentialHitObject = nullptr;
+            IntersectionInfo currentHitInfo;
+            IntersectionInfo tempSelectedHitInfo;
+
+            for (Object* obj : g_scene->objects) {
+                if (obj == g_groundPlane) {
+                    continue;
+                }
+
+                if (obj->intersect(pickingRay, currentHitInfo)) {
+                    if (currentHitInfo.distance < closestHitDistance) {
+                        closestHitDistance = currentHitInfo.distance;
+                        potentialHitObject = obj;
+                        tempSelectedHitInfo = currentHitInfo;
+                    }
                 }
             }
-        }
 
-        g_selectedObject = potentialHitObject;
-        if (g_selectedObject) {
-            g_selectedHitInfo = tempSelectedHitInfo;
-            std::cout << "Selected object at: (" << g_selectedHitInfo.point.x << ", " << g_selectedHitInfo.point.y << ", " << g_selectedHitInfo.point.z << ")" << std::endl;
-        } else {
-            std::cout << "No object selected (or ground plane hit)." << std::endl;
-        }
-    }
-
-    // --- NEW: Handle right mouse button for camera rotation ---
-    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-        if (action == GLFW_PRESS) {
-            g_isRotating = true;
-            // Reset firstMouse flag when rotation starts
-            g_firstMouse = true;
-        } else if (action == GLFW_RELEASE) {
-            g_isRotating = false;
+            g_selectedObject = potentialHitObject;
+            if (g_selectedObject) {
+                g_selectedHitInfo = tempSelectedHitInfo;
+                std::cout << "Selected object at: (" << g_selectedHitInfo.point.x << ", " << g_selectedHitInfo.point.y << ", " << g_selectedHitInfo.point.z << ")" << std::endl;
+            } else {
+                std::cout << "No object selected (or ground plane hit)." << std::endl;
+            }
         }
     }
 }
 
-// --- NEW: Mouse cursor position callback for camera rotation ---
-void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-    // Pass mouse events to ImGui first
+// Custom mouse cursor position callback
+void customCursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+    // Always pass the event to ImGui's handler first
     ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
 
-    // Only rotate if right mouse button is pressed AND ImGui is not interacting with the mouse
+    // Only rotate if right mouse button is pressed AND ImGui is not capturing the mouse
     if (g_isRotating && !ImGui::GetIO().WantCaptureMouse) {
         if (g_firstMouse) {
             g_lastMouseX = static_cast<float>(xpos);
@@ -323,8 +325,6 @@ void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
         float pitch_rad = g_cameraPitch * M_PI / 180.0f;
 
         // Spherical coordinates to Cartesian
-        // Assuming lookAt is (0,0,0) for simplicity in this calculation
-        // If lookAt is not (0,0,0), you'd add lookAt to this calculated position
         g_camera->eyePosition.x = g_cameraRadius * std::cos(yaw_rad) * std::cos(pitch_rad);
         g_camera->eyePosition.y = g_cameraRadius * std::sin(pitch_rad);
         g_camera->eyePosition.z = g_cameraRadius * std::sin(yaw_rad) * std::cos(pitch_rad);
@@ -332,13 +332,44 @@ void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
         // Adjust for lookAt point if it's not at the origin
         g_camera->eyePosition += g_camera->lookAt;
 
-        // Update camera's basis vectors (u, v, w) after position change
-        g_camera->w = (g_camera->eyePosition - g_camera->lookAt).normalize();
-        g_camera->u = g_camera->upVector.cross(g_camera->w).normalize();
-        g_camera->v = g_camera->w.cross(g_camera->u);
+        g_camera->updateBasis(); // Call updateBasis here
     }
 }
-// --- END NEW MOUSE ORBIT LOGIC ---
+
+// Custom scroll callback
+void customScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+    // Add custom scroll logic here if needed, checking ImGui::GetIO().WantCaptureMouse
+    if (!ImGui::GetIO().WantCaptureMouse) {
+        // Example: Adjust camera radius with scroll wheel
+        g_cameraRadius -= static_cast<float>(yoffset);
+        if (g_cameraRadius < 1.0f) g_cameraRadius = 1.0f; // Minimum radius
+        if (g_cameraRadius > 20.0f) g_cameraRadius = 20.0f; // Maximum radius
+
+        // Recalculate camera position after radius change
+        float yaw_rad = g_cameraYaw * M_PI / 180.0f;
+        float pitch_rad = g_cameraPitch * M_PI / 180.0f;
+        g_camera->eyePosition.x = g_cameraRadius * std::cos(yaw_rad) * std::cos(pitch_rad);
+        g_camera->eyePosition.y = g_cameraRadius * std::sin(pitch_rad);
+        g_camera->eyePosition.z = g_cameraRadius * std::sin(yaw_rad) * std::cos(pitch_rad);
+        g_camera->eyePosition += g_camera->lookAt;
+        g_camera->updateBasis();
+    }
+}
+
+// Custom keyboard callback
+void customKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+    // Add custom key logic here if needed, checking ImGui::GetIO().WantCaptureKeyboard
+}
+
+// Custom character input callback
+void customCharCallback(GLFWwindow* window, unsigned int c) {
+    ImGui_ImplGlfw_CharCallback(window, c);
+    // Add custom char logic here if needed, checking ImGui::GetIO().WantCaptureKeyboard
+}
+
+// --- END Custom GLFW Callbacks ---
 
 
 // Main function for the ray tracing application.
@@ -369,10 +400,6 @@ int main(void) {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
-    // Register mouse button and cursor position callbacks
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
-    glfwSetCursorPosCallback(window, cursorPosCallback); // NEW: Register cursor position callback
-
     // Initialize GLEW (or GLAD if preferred)
     GLenum err = glewInit();
     if (GLEW_OK != err) {
@@ -393,8 +420,17 @@ int main(void) {
     // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true); // true enables keyboard/mouse callbacks
+    // IMPORTANT: Set install_callbacks to FALSE here, we will install them manually
+    ImGui_ImplGlfw_InitForOpenGL(window, false); // Changed to false
     ImGui_ImplOpenGL3_Init("#version 330"); // Use GLSL version 330 for core profile
+
+    // --- Manually set GLFW callbacks after ImGui_ImplGlfw_InitForOpenGL ---
+    glfwSetMouseButtonCallback(window, customMouseButtonCallback);
+    glfwSetCursorPosCallback(window, customCursorPosCallback);
+    glfwSetScrollCallback(window, customScrollCallback); // Added scroll callback for camera zoom
+    glfwSetKeyCallback(window, customKeyCallback);       // Added key callback
+    glfwSetCharCallback(window, customCharCallback);     // Added char callback
+    // --- END Manual Callback Setup ---
 
     // Setup OpenGL texture for framebuffer display
     setupOpenGLTexture();
@@ -423,11 +459,8 @@ int main(void) {
     g_camera->eyePosition.x = g_cameraRadius * std::cos(initial_yaw_rad) * std::cos(initial_pitch_rad);
     g_camera->eyePosition.y = g_cameraRadius * std::sin(initial_pitch_rad);
     g_camera->eyePosition.z = g_cameraRadius * std::sin(initial_yaw_rad) * std::cos(initial_pitch_rad);
-    g_camera->eyePosition += g_camera->lookAt; // Adjust if lookAt is not origin
-    // Recalculate camera basis vectors after setting initial eyePosition
-    g_camera->w = (g_camera->eyePosition - g_camera->lookAt).normalize();
-    g_camera->u = g_camera->upVector.cross(g_camera->w).normalize();
-    g_camera->v = g_camera->w.cross(g_camera->u);
+    g_camera->eyePosition += g_camera->lookAt;
+    g_camera->updateBasis(); // Call updateBasis here
 
 
     // 3. Scene Setup
@@ -474,9 +507,7 @@ int main(void) {
             g_camera->eyePosition.y = g_cameraRadius * std::sin(pitch_rad);
             g_camera->eyePosition.z = g_cameraRadius * std::sin(yaw_rad) * std::cos(pitch_rad);
             g_camera->eyePosition += g_camera->lookAt; // Adjust for new lookAt
-            g_camera->w = (g_camera->eyePosition - g_camera->lookAt).normalize();
-            g_camera->u = g_camera->upVector.cross(g_camera->w).normalize();
-            g_camera->v = g_camera->w.cross(g_camera->u);
+            g_camera->updateBasis(); // Call updateBasis here
         }
         if (ImGui::SliderFloat("FOV", &g_camera->fov, 10.0f, 120.0f)) {
             // No direct camera basis recalculation needed for FOV, but it affects ray generation.
@@ -490,9 +521,7 @@ int main(void) {
             g_camera->eyePosition.y = g_cameraRadius * std::sin(pitch_rad);
             g_camera->eyePosition.z = g_cameraRadius * std::sin(yaw_rad) * std::cos(pitch_rad);
             g_camera->eyePosition += g_camera->lookAt; // Adjust for lookAt
-            g_camera->w = (g_camera->eyePosition - g_camera->lookAt).normalize();
-            g_camera->u = g_camera->upVector.cross(g_camera->w).normalize();
-            g_camera->v = g_camera->w.cross(g_camera->u);
+            g_camera->updateBasis(); // Call updateBasis here
         }
         ImGui::Separator();
 

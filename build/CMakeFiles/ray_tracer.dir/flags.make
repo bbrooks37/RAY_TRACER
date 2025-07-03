@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/patpa/ray_tracer/src -I/home/patpa/ray_tracer/imgui -I/home/patpa/ray_tracer/imgui/backends
 
-CXX_FLAGS = -std=gnu++11 -Wall -Wextra -pedantic -O3
+CXX_FLAGS = -g -std=gnu++11 -Wall -Wextra -pedantic -g
 
