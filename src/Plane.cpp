@@ -3,11 +3,9 @@
 #include <limits> // For std::numeric_limits
 #include <cmath>  // For std::fabs
 
-// Default destructor definition for Plane.
-// Even if it's defaulted in the header, for polymorphic classes,
-// its definition must be present in one compilation unit to ensure
-// the virtual table (vtable) is correctly generated and linked.
-Plane::~Plane() = default;
+// The definition 'Plane::~Plane() = default;' is no longer needed here
+// because it is explicitly defaulted in the header (Plane.h),
+// and the compiler will generate its definition automatically.
 
 // Implements the ray-plane intersection test.
 // A ray is defined as R(t) = O + tD, where O is origin, D is direction.
